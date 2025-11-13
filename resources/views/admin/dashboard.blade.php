@@ -1,8 +1,3 @@
-@extends('layouts.app')
-
-@section('content')
-<div>
-  <h1>Admin Dashboard</h1>
-  <p>Selamat datang, {{ Auth::user()->nama ?? Auth::user()->email }} (role: {{ Auth::user()->role }})</p>
-</div>
-@endsection
+<x-layouts.app title="Admin Dashboard">
+    <h1 class="ml-4">Halo Selamat Datang Admin</h1>
+</x-layouts.app>

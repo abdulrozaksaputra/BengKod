@@ -1,74 +1,64 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
-    {{-- Anda bisa menautkan CSS framework di sini, misalnya Bootstrap/Tailwind --}}
-    <style>
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border: 1px solid transparent;
-            border-radius: 4px;
-        }
-        .alert-success {
-            color: #3c763d;
-            background-color: #dff0d8;
-            border-color: #d6e9c6;
-        }
-        .alert-danger {
-            color: #a94442;
-            background-color: #f2dede;
-            border-color: #ebccd1;
-        }
-    </style>
-</head>
-<body>
+{{-- <h2>Login</h2> --}}
+{{--
+@if ($errors->any())
+<p style="color:red">{{ $errors->first() }}</p>
+@endif --}}
 
-    <div class="container">
-        <h2>Halaman Login</h2>
+{{-- <form method="POST" action="{{ route('login') }}">
+    @csrf
+    <label>Email:</label><br>
+    <input type="email" name="email" required><br>
 
-        {{-- 🔔 Notifikasi Sukses Setelah Registrasi --}}
-        @if (session('success'))
-            <div class="alert alert-success">
-                **Berhasil!** {{ session('success') }}
+    <label>Password:</label><br>
+    <input type="password" name="password" required><br><br>
+
+    <button type="submit">Login</button>
+</form> --}}
+
+<x-layouts.guest title="Login">
+    <div class="login-box d-flex flex-column justify-content-center align-items-center w-100 vh-100">
+        <div class="card card-outline card-primary">
+            <div class="card-header text-center text-lg">
+                <b>Poli</b>klinik
             </div>
-        @endif
+            <div class="card-body">
+                <p class="login-box-msg">Login ke akun anda</p>
+                <form action="{{ route('login') }}" method="POST">
+                    @csrf
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" placeholder="Email" name="email">
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-envelope"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-group mb-3">
+                        <input type="password" class="form-control" placeholder="Password" name="password">
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                                <span class="fas fa-lock"></span>
+                            </div>
+                        </div>
+                    </div>
 
-        {{-- ❌ Notifikasi Error Login --}}
-        @if ($errors->any())
-            <div class="alert alert-danger">
-                <ul>
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
+                    @if ($errors->any())
+                        <p class="alert alert-danger">{{ $errors->first() }}</p>
+                    @endif
+
+                    <div class="row">
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary btn-block" name="submit">Login</button>
+                        </div>
+                    </div>
+                </form>
+
+                <div class="row mt-3 justify-content-center">
+                    <div class="col-12 text-center">
+                        <span>Belum punya akun? <a href="{{ route('register') }}">Register</a></span>
+                    </div>
+                </div>
             </div>
-        @endif
-
-        ---
-
-        <form method="POST" action="{{ route('login') }}">
-            @csrf
-
-            <div>
-                <label for="email">Email</label>
-                <input type="email" name="email" id="email" required autofocus value="{{ old('email') }}">
-            </div>
-
-            <div>
-                <label for="password">Password</label>
-                <input type="password" name="password" id="password" required>
-            </div>
-
-            <div>
-                <button type="submit">Login</button>
-            </div>
-
-            <p>Belum punya akun? <a href="{{ route('register') }}">Daftar di sini</a></p>
-
-        </form>
+        </div>
     </div>
-</body>
-</html>
+</x-layouts.guest>

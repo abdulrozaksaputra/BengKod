@@ -28,9 +28,7 @@ class PoliController extends Controller
         ]);
 
         Poli::create($validated);
-        return redirect()->route('polis.index')
-            ->with('success', 'Poli berhasil di tambahkan')
-            ->with('type', 'success');
+        return redirect()->route('polis.index')->with('success', 'Poli berhasil di tambahkan')->with('type', 'success');
     }
 
     public function edit($id)

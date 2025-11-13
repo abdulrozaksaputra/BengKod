@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Poli;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException; // Tambahkan ini
 
 class AuthController extends Controller
 {
@@ -14,33 +14,26 @@ class AuthController extends Controller
     {
         return view('auth.login');
     }
-    
+
     public function login(Request $request)
     {
         $credentials = $request->only('email', 'password');
 
         if (Auth::attempt($credentials)) {
-            // ✅ PERBAIKAN: Regenerasi Session untuk keamanan (Session Fixation)
-            $request->session()->regenerate();
-            
             $user = Auth::user();
-
+            // dd($user->role);
             if ($user->role == 'admin') {
-                return redirect()->route('admin.dashboard')->with('status', 'Selamat datang kembali, Admin!');
+                return redirect()->route('admin.dashboard');
             } elseif ($user->role == 'dokter') {
-                return redirect()->route('dokter.dashboard')->with('status', 'Selamat datang, Dokter!');
+                return redirect()->route('dokter.dashboard');
             } else {
-                return redirect()->route('pasien.dashboard')->with('status', 'Selamat datang!');
+                return redirect()->route('pasien.dashboard');
             }
+            // dd($user);
         }
-        
-        // Menggunakan ValidationException agar error ditangani dengan baik oleh Laravel
-        throw ValidationException::withMessages([
-            'email' => ['Email atau password yang Anda masukkan salah!'],
-        ]);
-        
-        // Alternatif jika Anda tetap ingin menggunakan return back():
-        // return back()->withErrors(['email' => 'Email atau Password Salah!']);
+
+        // dd($user->role);
+        return back()->withErrors(['email' => 'Email atau Password Salah !']);
     }
 
     public function showRegister()
@@ -50,48 +43,51 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        // Pastikan Anda sudah menambahkan use Illuminate\Validation\ValidationException di bagian atas
-        
         $request->validate([
             'nama' => ['required', 'string', 'max:255'],
-            'role' => ['required', 'in:pasien,admin,dokter'],
-            // Validasi email dan password hanya jika bukan role pasien
-            'email' => ['required_if:role,admin,dokter', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required_if:role,admin,dokter', 'confirmed'],
-            // Validasi khusus pasien
-            'nik' => ['required_if:role,pasien', 'string', 'max:30', 'unique:users,nik'], // Tambah unique NIK
-            'no_hp' => ['required_if:role,pasien', 'string', 'max:20'],
-            'umur' => ['required_if:role,pasien', 'integer'],
+            'alamat' => ['required', 'string', 'max:255'],
+            'no_ktp' => ['required', 'string', 'max:30'],
+            'no_hp' => ['required', 'string', 'max:20'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed'],
         ]);
 
 
-        $data = [
-            'nama' => $request->nama,
-            'role' => $request->role,
-            // Jika role pasien, email mungkin null, sesuaikan dengan database
-            'email' => $request->role !== 'pasien' ? $request->email : null,
-            // Password hanya di-hash jika bukan pasien (asumsi pasien login pakai NIK/HP)
-            'password' => $request->role !== 'pasien' && $request->password ? Hash::make($request->password) : null,
-            'no_hp' => $request->role === 'pasien' ? $request->no_hp : null,
-            'nik' => $request->role === 'pasien' ? $request->nik : null,
-            'umur' => $request->role === 'pasien' ? $request->umur : null,
-        ];
-        
-        // Pastikan field di model User sudah diisi di $fillable
-        User::create($data);
+        //cek apakah nomor KTP sudah terdaftar
+        if(User::where('no_ktp', $request->no_ktp)->exists()) {
+            return back()->withErrors(['no_ktp' => 'Nomor Ktp Sudah terdaftar']);
+        }
 
-        // ✅ BARIS KUNCI: Redirect ke halaman login dengan notifikasi sukses
-        return redirect()->route('login')->with('success', 'Registrasi berhasil, silakan login.');
+        $no_rm = date('Ym') . '-' . str_pad(
+            User::where('no_rm', 'like', date('Ym') . '-%')->count() + 1,
+            3,
+            '0',
+            STR_PAD_LEFT
+        );
+
+        User::create([
+            'nama' => $request->nama,
+            'alamat' => $request->alamat,
+            'no_ktp' => $request->no_ktp,
+            'no_hp' => $request->no_hp,
+            'no_rm' => $no_rm,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'pasien',
+        ]);
+
+        return redirect()->route('login');
     }
 
     public function logout()
     {
         Auth::logout();
-        
-        // ✅ Regenerasi session setelah logout dan menginvalidasi token CSRF (keamanan)
-        request()->session()->invalidate();
-        request()->session()->regenerateToken(); 
-        
         return redirect()->route('login');
+    }
+
+    public function dokter()
+    {
+        $data = Poli::with('dokters')->get();
+        return $data;
     }
 }
