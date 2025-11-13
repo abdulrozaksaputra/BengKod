@@ -31,29 +31,37 @@ class AuthController extends Controller
         return back()->withErrors(['email' => 'Email atau Password Salah!']);
     }
 
+    public function showRegister()
+    {
+        return view('auth.register');
+    }
+
     public function register(Request $request)
     {
         $request->validate([
             'nama' => ['required', 'string', 'max:255'],
-            'alamat' => ['required', 'string', 'max:255'],
-            'no_ktp' => ['required', 'string', 'max:30'],
-            'no_hp' => ['required', 'string', 'max:20'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'confirmed'],
+            'role' => ['required', 'in:pasien,admin,dokter'],
+            'email' => ['required_if:role,admin,dokter', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required_if:role,admin,dokter', 'confirmed'],
+            'nik' => ['required_if:role,pasien', 'string', 'max:30'],
+            'no_hp' => ['required_if:role,pasien', 'string', 'max:20'],
+            'umur' => ['required_if:role,pasien', 'integer'],
         ]);
 
 
-        User::create([
+        $data = [
             'nama' => $request->nama,
-            'alamat' => $request->alamat,
-            'no_ktp' => $request->no_ktp,
-            'no_hp' => $request->no_hp,
+            'role' => $request->role,
             'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => 'pasien',
-        ]);
+            'password' => $request->role !== 'pasien' ? Hash::make($request->password) : null,
+            'no_hp' => $request->role === 'pasien' ? $request->no_hp : null,
+            'nik' => $request->role === 'pasien' ? $request->nik : null,
+            'umur' => $request->role === 'pasien' ? $request->umur : null,
+        ];
 
-        return redirect()->route('login');
+        User::create($data);
+
+        return redirect()->route('login')->with('success', 'Registrasi berhasil, silakan login.');
     }
 
     public function logout()

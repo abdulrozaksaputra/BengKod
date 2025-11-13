@@ -135,6 +135,11 @@
         @if($errors->any())
           <div class="error">{{ $errors->first() }}</div>
         @endif
+        @if(session('success'))
+          <div style="background:#d1fae5;color:#065f46;padding:10px;border-radius:6px;margin-bottom:12px;">
+            {{ session('success') }}
+          </div>
+        @endif
         <form method="POST" action="/login">
           @csrf
           <div class="form-group">
@@ -144,6 +149,10 @@
           <div class="form-group">
             <label>Password</label>
             <input type="password" name="password" placeholder="••••••••" required>
+          </div>
+          <div class="form-group">
+            <label>Nama</label>
+            <input type="text" name="name" placeholder="Nama Lengkap" required>
           </div>
           <div class="form-actions">
             <a href="/register">Belum punya akun?</a>
